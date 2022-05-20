@@ -45,7 +45,7 @@ def auth():
     return redirect(url)
 
 
-@app.route('/oauth/slack/callback', methods=['GET'])
+@app.route('/oauth/slack/callback', methods=['POST'])
 def authCallback():
     code = request.args['code']
     app.logger.info('requesting token using %s code' % code)
