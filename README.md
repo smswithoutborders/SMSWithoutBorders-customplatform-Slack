@@ -28,5 +28,8 @@ A simple slack app that authenticates users given their app's **Client ID** and 
 - Grab the Client ID and Client Secret of yor Slack App from the API site and add. Also add your callback URL.
 - Run `flask run` on your terminal.
 
+#### References
+- [Slack API OAuth2 Docs](https://api.slack.com/authentication/oauth-v2)
+
 You are good to go!!
 
