@@ -1,3 +1,4 @@
+from crypt import methods
 import os
 import sys
 import slack
@@ -27,12 +28,8 @@ BASE_URL = "http://127.0.0.1:5000/"
 def homepage():
     # checks for stored token
     if os.path.exists("creds.json"):
-        f = open('creds.json')
-        data = json.load(f)
-        if data[SLACK_APP_CLIENT_ID]:
-            client = slack.WebClient(token=data[SLACK_APP_CLIENT_ID])
-            client.chat_postMessage(channel='#bots', text="Hello World", as_user=True)
-            return "<h1>Your message was sent :)</h1>", 200
+        url = f"{BASE_URL}/slack/send"
+        return redirect(url)
 
     return '<p>Welcome to the sample Slack OAuth app! Click <a href="/auth/slack">here</a> to log in</p>'
 
@@ -47,7 +44,7 @@ def auth():
 
 @app.route('/oauth/slack/callback', methods=['POST'])
 def authCallback():
-    code = request.args['code']
+    code = request.json['code']
     app.logger.info('requesting token using %s code' % code)
 
     tokenResponse = requests.post("https://slack.com/api/oauth.v2.access",
@@ -66,12 +63,22 @@ def authCallback():
     creds = json.dumps({SLACK_APP_CLIENT_ID: access_token}, indent=2)
     with open('creds.json', 'w') as f:
         f.write(creds)
-    
-    # Sends message
-    client = slack.WebClient(token=access_token)
-    client.chat_postMessage(channel='#bots', text="Hello World", as_user=True)
 
-    return "<h1>Your message was sent :)</h1>", 200
+    url = f'{BASE_URL}/slack/send'
+    return redirect(url)
+
+
+@app.route('/slack/send', methods=['GET', 'POST'])
+def sendMessage():
+    if os.path.exists("creds.json"):
+        f = open('creds.json')
+        data = json.load(f)
+        if data[SLACK_APP_CLIENT_ID]:
+            client = slack.WebClient(token=data[SLACK_APP_CLIENT_ID])
+            client.chat_postMessage(channel='#bots', text="Hello World", as_user=True)
+            return "<h1>Your message was sent :)</h1>", 200
+    else:
+        return redirect(BASE_URL)
 
 
 if __name__ == "__main__":
