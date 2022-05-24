@@ -2,10 +2,19 @@
 A simple slack app that authenticates users given their app's **Client ID** and **Client Secret** and sends a message on their behalf.
 
 
-### Dependencies
-- [Flask](https://pypi.org/project/Flask/)
-- [Slack Web Client](https://pypi.org/project/slackclient/)
-- [Python Requests](https://pypi.org/project/requests/)
+### Installing Dependencies
+- Create a virtual environment
+```bash
+python3 -m venv venv
+```
+- Activate the virtual environment
+```bash
+. venv/bin/activate
+```
+- Install dependencies in `requirements.txt`
+```bash
+pip3 install -r requirements. txt
+```
 
 
 ### Creating and Installing your Slack App
@@ -29,13 +38,18 @@ A simple slack app that authenticates users given their app's **Client ID** and 
 - Run `flask run` on your terminal.
 
 #### API Reference
-- `GET /auth/slack`
+- `GET /`: 
+Displays homepage to begin authentication
+- `GET /auth/slack`: 
 Displays a consent screen with the various scopes for users to grant permission
 
-- `POST /oauth/slack/callback`
+- `POST /oauth/slack/callback`: 
 Exchanges temporary authorization code for the access token
   ###### Parameters
     - `code`: Temporal authorization code issued by slack after granting consent.
+- `POST /slack/send`: 
+Send message to slack with stored access token
+
 
 
 #### References
