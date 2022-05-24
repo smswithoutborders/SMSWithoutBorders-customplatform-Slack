@@ -27,8 +27,8 @@ pip3 install -r requirements. txt
 - Click on the button to install your app to the workspace.
 - If you make any more changes to the scope, be sure to reinstall your app.
 - Go back to your *Auth & Permissions* page. You should be able to find where to add a callback URL. This is the URL our flask app will go to after you've been authenticated.
-- The base URL of this Flask app (if running locally) is `http://127.0.0.1:5000/` and the callback URL is `http://127.0.0.1:5000/oauth/slack/callback`. However, the slack API only accepts `https` sites for callback URLs. I recommend you install [ngrok](https://ngrok.com) and set it up where it will generate an `https` URL out of your localhost URL. 
-- Once this is done, add it as your callback URL. Do not forget to add the `oauth/slack/callback` endpoint.
+- The base URL of this Flask app (if running locally) is `http://127.0.0.1:5000/` and the callback URL is `http://127.0.0.1:5000/oauth/slack/callback`. However, the slack API only accepts `https` sites for callback URLs. 
+- Add `http://127.0.0.1:5000/oauth/slack/callback` as your callback URL.
 - Head back to your slack workspace and invite your app to the channel you intend it should send messages to.
 
 

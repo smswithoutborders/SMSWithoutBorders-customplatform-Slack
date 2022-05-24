@@ -61,7 +61,6 @@ def authCallback():
     with open('creds.json', 'w') as f:
         f.write(creds)
 
-    # url = f'{BASE_URL}/slack/send'
     user_info = {"userId": tokenResponse.json()['authed_user']['id'], "appId": tokenResponse.json()['app_id']}
     return jsonify(user_info)
 
