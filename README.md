@@ -49,6 +49,9 @@ Exchanges temporary authorization code for the access token
     - `code`: Temporal authorization code issued by slack after granting consent.
 - `POST /slack/send`: 
 Send message to slack with stored access token
+  ###### Parameters
+    - `channel`: A channel ID or channel name you are currently present in. User ID if you want to DM someone.
+    - `message`: The message or text you intend sending.
 
 
 

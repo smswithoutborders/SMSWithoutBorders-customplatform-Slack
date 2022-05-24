@@ -4,9 +4,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 import requests
 import logging
-from urllib.parse import urlencode
 from operator import itemgetter
 import json
+from slack.errors import SlackApiError
 
 from flask import Flask, request, redirect, jsonify
 app = Flask(__name__)
@@ -19,16 +19,14 @@ load_dotenv(dotenv_path=env_path)
 SLACK_APP_CLIENT_ID = os.environ['SLACK_APP_CLIENT_ID']
 SLACK_APP_CLIENT_SECRET = os.environ['SLACK_APP_CLIENT_SECRET']
 OAUTH_CALLBACK = os.environ['OAUTH_CALLBACK']
-BASE_URL = "http://127.0.0.1:5000/"
+BASE_URL = "http://127.0.0.1:5000"
 
 
 @app.route('/')
 def homepage():
     # checks for stored token
     if os.path.exists("creds.json"):
-        url = f"{BASE_URL}/slack/send"
-        return redirect(url)
-
+        return '<h1>You have already been authenticated</h1>'
     return '<p>Welcome to the sample Slack OAuth app! Click <a href="/auth/slack">here</a> to log in</p>'
 
 
@@ -59,7 +57,7 @@ def authCallback():
 
 
     # store token
-    creds = json.dumps({SLACK_APP_CLIENT_ID: access_token}, indent=2)
+    creds = json.dumps({"access_token": access_token}, indent=2)
     with open('creds.json', 'w') as f:
         f.write(creds)
 
@@ -68,15 +66,20 @@ def authCallback():
     return jsonify(user_info)
 
 
-@app.route('/slack/send', methods=['GET', 'POST'])
+@app.route('/slack/send', methods=['POST'])
 def sendMessage():
     if os.path.exists("creds.json"):
-        f = open('creds.json')
-        data = json.load(f)
-        if data[SLACK_APP_CLIENT_ID]:
-            client = slack.WebClient(token=data[SLACK_APP_CLIENT_ID])
-            client.chat_postMessage(channel='#bots', text="Hello World", as_user=True)
-            return "<h1>Your message was sent :)</h1>", 200
+        try:
+            channel = request.json['channel']
+            message = request.json['message']
+            f = open('creds.json')
+            data = json.load(f)
+            if data['access_token']:
+                client = slack.WebClient(token=data['access_token'])
+                client.chat_postMessage(channel=channel, text=message, as_user=True)
+                return "<h1>Your message was sent :)</h1>", 200
+        except SlackApiError as e:
+            return e.response["error"]
     else:
         return redirect(BASE_URL)
 
