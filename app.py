@@ -1,6 +1,4 @@
-from crypt import methods
 import os
-import sys
 import slack
 from pathlib import Path
 from dotenv import load_dotenv
@@ -10,7 +8,7 @@ from urllib.parse import urlencode
 from operator import itemgetter
 import json
 
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, jsonify
 app = Flask(__name__)
 
 logging.basicConfig(level='INFO', format='%(asctime)s-%(levelname)s-%(message)s')
@@ -37,7 +35,7 @@ def homepage():
 @app.route('/auth/slack', methods=['GET'])
 def auth():
     oauth_base = "https://slack.com/oauth/v2/authorize?"
-    url = f"{oauth_base}scope=incoming-webhook,commands,chat:write&redirect_uri={OAUTH_CALLBACK}&client_id={SLACK_APP_CLIENT_ID}&user_scope=chat:write"
+    url = f"{oauth_base}redirect_uri={OAUTH_CALLBACK}&client_id={SLACK_APP_CLIENT_ID}&user_scope=chat:write,channels:write,groups:write,im:write,mpim:write,channels:read,groups:read,im:read,mpim:read"
 
     return redirect(url)
 
@@ -59,13 +57,15 @@ def authCallback():
     authed_user = itemgetter('authed_user')(tokenResponse.json())
     access_token = itemgetter('access_token')(authed_user)
 
+
     # store token
     creds = json.dumps({SLACK_APP_CLIENT_ID: access_token}, indent=2)
     with open('creds.json', 'w') as f:
         f.write(creds)
 
-    url = f'{BASE_URL}/slack/send'
-    return redirect(url)
+    # url = f'{BASE_URL}/slack/send'
+    user_info = {"userId": tokenResponse.json()['authed_user']['id'], "appId": tokenResponse.json()['app_id']}
+    return jsonify(user_info)
 
 
 @app.route('/slack/send', methods=['GET', 'POST'])
