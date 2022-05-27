@@ -7,9 +7,11 @@ import logging
 from operator import itemgetter
 import json
 from slack.errors import SlackApiError
-
+from slackeventsapi import SlackEventAdapter
 from flask import Flask, request, redirect, jsonify
+
 app = Flask(__name__)
+slack_event_adapter = SlackEventAdapter(os.environ['SIGNING_SECRET'],'/slack/events', app)
 
 logging.basicConfig(level='INFO', format='%(asctime)s-%(levelname)s-%(message)s')
 
@@ -81,6 +83,45 @@ def sendMessage():
             return e.response["error"]
     else:
         return redirect(BASE_URL)
+
+@slack_event_adapter.on('message')
+def message(payload):
+    event = payload.get('event', {})
+    channel_id = event.get('channel')
+    user_id = event.get('user')
+    text = event.get('text')
+
+    message = {'channel': user_id, 'blocks':[
+        {
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": (
+                    "Greetings from the *SWOB Slack App* \n\n"
+                    "Get started by connecting your slack account to SMS Without Borders in order for the SWOB App to send messages to this workspace on your behalf :)"
+                )
+			},
+		},
+        
+		{
+			"type": "actions",
+			"block_id": "actionblock789",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Connect to SWOB"
+					},
+                    "style": "primary",
+					"url": "https://05c7-41-202-207-147.sa.ngrok.io/auth/slack"
+				}
+			]
+		}
+    ]}
+
+    client = slack.WebClient(token=os.environ['BOT_TOKEN'])
+    client.chat_postMessage(**message)
 
 
 if __name__ == "__main__":
