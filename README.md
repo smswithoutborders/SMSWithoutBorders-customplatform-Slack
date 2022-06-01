@@ -28,14 +28,20 @@ pip3 install -r requirements. txt
 - If you make any more changes to the scope, be sure to reinstall your app.
 - Go back to your *Auth & Permissions* page. You should be able to find where to add a callback URL. This is the URL our flask app will go to after you've been authenticated.
 - The base URL of this Flask app (if running locally) is `http://127.0.0.1:5000/` and the callback URL is `http://127.0.0.1:5000/oauth/slack/callback`. However, the slack API only accepts `https` sites for callback URLs. 
-- Add `http://127.0.0.1:5000/oauth/slack/callback` as your callback URL.
-- Head back to your slack workspace and invite your app to the channel you intend it should send messages to.
-
+- Add `https://127.0.0.1:5000/oauth/slack/callback` as your callback URL.
 
 ### Running your app to send a message on your behalf
 - In this project's root, rename the `.example.env` file to `.env`.
 - Grab the Client ID and Client Secret of yor Slack App from the API site and add. Also add your callback URL.
 - Run `flask run` on your terminal.
+
+### Test the Events API (Make sure the app is running)
+- Navigate to the *Event Subscriptions* page and enable events.
+- Your request URL should be `http://127.0.0.1:5000/slack/events`.
+- Scroll down to subscribe to bot events. Add `message.channels`.
+- Go to the *OAuth & Permissions* page, get your bot token and add to the environment file.
+- Head back to your slack workspace and invite your app to the channel you intend it should send messages to.
+- Send a message any channel the bot is in. The bot should send a message to you for you to connect to SWOB.
 
 #### API Reference
 - `GET /`: 
@@ -52,6 +58,8 @@ Send message to slack with stored access token
   ###### Parameters
     - `channel`: A channel ID or channel name you are currently present in. User ID if you want to DM someone.
     - `message`: The message or text you intend sending.
+- `POST /slack/events`:
+Listens for events in the slack workspace
 
 
 

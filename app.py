@@ -87,9 +87,7 @@ def sendMessage():
 @slack_event_adapter.on('message')
 def message(payload):
     event = payload.get('event', {})
-    channel_id = event.get('channel')
     user_id = event.get('user')
-    text = event.get('text')
 
     message = {'channel': user_id, 'blocks':[
         {
