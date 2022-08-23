@@ -3,3 +3,5 @@ creds.json
 data/
 __pycache__/
 venv
+configs/credentials.json
+test.py

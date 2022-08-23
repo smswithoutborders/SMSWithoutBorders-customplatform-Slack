@@ -1,6 +1,4 @@
-# OAuth2 Slack App
-A simple slack app that authenticates users given their app's **Client ID** and **Client Secret** and sends a message on their behalf.
-
+# SMSWithoutBorders Custom Platform - Slack
 
 ### Installing Dependencies
 - Create a virtual environment
@@ -13,59 +11,60 @@ python3 -m venv venv
 ```
 - Install dependencies in `requirements.txt`
 ```bash
-pip3 install -r requirements. txt
+pip3 install -r requirements.txt
 ```
 
 
-### Creating and Installing your Slack App
+### Creating and setting up your Slack App
 - Head over to the [Slack API site](https://api.slack.com/apps) and create a new slack app.
 - Select the workspace you want your app to be installed in.
 - After your app is created, go to *OAuth & Permissions* on your sidebar menu.
 - Scroll down to the **Scopes** section where we have *Bot Token Scopes* and *User Token Scopes*.
-- Add a new scope for each of them. For each, select `chat:write`.
+- For the bot token scopes, add `app_mentions:read`, `channels:history`, `channels:join`, `chat:write`, `im:history`, `im:read`, `im:write`,and `users:write`
+- For the user token scopes, add `chat:write`
 - Go back to your sidebar menu in the *Settings* sections and go to *Install App*.
 - Click on the button to install your app to the workspace.
 - If you make any more changes to the scope, be sure to reinstall your app.
-- Go back to your *Auth & Permissions* page. You should be able to find where to add a callback URL. This is the URL our flask app will go to after you've been authenticated.
-- The base URL of this Flask app (if running locally) is `http://127.0.0.1:5000/` and the callback URL is `http://127.0.0.1:5000/oauth/slack/callback`. However, the slack API only accepts `https` sites for callback URLs. 
-- Add `https://127.0.0.1:5000/oauth/slack/callback` as your callback URL.
-
-### Running your app to send a message on your behalf
-- In this project's root, rename the `.example.env` file to `.env`.
-- Grab the Client ID and Client Secret of yor Slack App from the API site and add. Also add your callback URL.
-- Run `flask run` on your terminal.
-
-### Test the Events API (Make sure the app is running)
-- Navigate to the *Event Subscriptions* page and enable events.
-- Your request URL should be `http://127.0.0.1:5000/slack/events`.
-- Scroll down to subscribe to bot events. Add `message.channels`.
-- Go to the *OAuth & Permissions* page, get your bot token and add to the environment file.
-- Head back to your slack workspace and invite your app to the channel you intend it should send messages to.
-- Send a message any channel the bot is in. The bot should send a message to you for you to connect to SWOB.
-
-#### API Reference
-- `GET /`: 
-Displays homepage to begin authentication
-- `GET /auth/slack`: 
-Displays a consent screen with the various scopes for users to grant permission
-
-- `POST /oauth/slack/callback`: 
-Exchanges temporary authorization code for the access token
-  ###### Parameters
-    - `code`: Temporal authorization code issued by slack after granting consent.
-- `POST /slack/send`: 
-Send message to slack with stored access token
-  ###### Parameters
-    - `channel`: A channel ID or channel name you are currently present in. User ID if you want to DM someone.
-    - `message`: The message or text you intend sending.
-- `POST /slack/events`:
-Listens for events in the slack workspace
 
 
+
+### Adding configurations and events
+- In the configs directory, create a `credentials.json` file. The content should look like this:
+```json
+{
+    "client_id": "",
+    "client_secret": "",
+    "signing_secret": "",
+    "bot_token": "",
+    "app_level_token": ""
+}
+```
+- Grab your slack app's client id, client secret and signing secret on the *Basic Information* page of the API site and add in the credentials file. Also copy the bot token from the *OAuth & Permissions* page.
+- Go to the *Socket Mode* page and turn on socket mode.
+- Now go to the *Basic Information* page and scroll to the *App Level Tokens* section. Generate an app-level token and make sure to select the `connections:write` and `authorizations:read` scopes.
+- Copy your app-level token and add to your credentials file.
+- Go to the *Event Subscription* page and turn on events. (You won't need a request URL since you turned on socket mode)
+- Scroll down the page where we have *Subscribe to bot events* and add the `app_mention`, `message.channels` and `message.im` events for now. (Make sure to save changes and reinstall the app)
+
+### Steps to run
+- Once all dependencies are installed and the `credentials.json` file is ready, run the events file. This should always be running so that it can listen to events.
+```bash
+python3 events.py
+```
+- In the `slack_app` file, we have 3 methods:
+	- `init`: To generate the authorization url. It returns a key-value pair with `url` as the key. This URL leads to the consent screen.
+	- `validate`: It accepts the temporary code you exchange in order to get the access token. For testing purposes, you can copy the code from the URL bar of your browser after granting the slack app permission and feed into this method. It returns two key-value pairs containing the `user_id` and their `access_token`. This token is the user access token different from the bot token.
+	- `revoke`: In this method, you pass in the user access token inorder to revoke it.
+- In the `slack.py` file, we have 2 functions:
+	- `message_channel`: Which accepts the channel id or channel name and the message.
+	- `send_dm`: Which accepts the email address of the receiver and and the intended message.
+If the messages are successfully sent, it will return `True`.
+- In order to test events are working, try tagging your bot in a channel it belongs to and it should send you a DM to connect to SWOB to Slack.
 
 #### References
 - [Slack API OAuth2 Docs](https://api.slack.com/authentication/oauth-v2)
 
 
 You are good to go!!
+
 
