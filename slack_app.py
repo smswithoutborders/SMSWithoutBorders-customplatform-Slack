@@ -2,7 +2,6 @@ import logging
 from slack_sdk.oauth import AuthorizeUrlGenerator
 from slack_sdk.oauth.installation_store import FileInstallationStore, Installation
 from slack_sdk.oauth.state_store import FileOAuthStateStore
-from slack_sdk import WebClient
 from slack_sdk import errors
 from slack_bolt import App
 
@@ -58,25 +57,28 @@ class Slack:
                 raise errors.SlackApiError("Could not validate code")
 
             user = response.get("authed_user", {})
+            user_id = user["id"]
+            profile = self.app.client.users_profile_get(user=user_id)
+            profile = profile.get("profile", {})
+
             result = {
-                "user_id": user["id"],
+                "profile": profile,
                 "access_token": user["access_token"]
             }
-            creds = json.dumps(result, indent=2)
-            with open('creds.json', 'w') as f:
-                f.write(creds)
 
-            return result
+            creds = json.dumps(result, indent=2)
+            return creds
+
         except errors.SlackApiError as err:
-            logger.debug("Error posting validating code: %s", err)
+            logger.debug("Error obtaining user token and profile: %s", err)
             return None
 
 
     def revoke(self, user_token):
         try:
-            app = WebClient(token=user_token)
-            res = app.auth_revoke()
-            if not bool(res.get("ok", "")):
+            app = App(token=user_token)
+            res = app.client.auth_revoke()
+            if bool(res.get("ok", "")):
                 return True
             else:
                 raise errors.SlackApiError("Error revoking token")
