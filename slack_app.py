@@ -1,68 +1,63 @@
 import os
 import json
 import logging
+logger = logging.getLogger(__name__)
 
 from slack_sdk.oauth import AuthorizeUrlGenerator
-from slack_sdk.oauth.installation_store import FileInstallationStore, Installation
-from slack_sdk.oauth.state_store import FileOAuthStateStore
 from slack_sdk import errors
 from slack_bolt import App
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 
+credentials_path = os.path.join(os.path.dirname(__file__), "configs", "credentials.json")
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-credentials_path = os.path.join(os.path.dirname(__file__), "configs/credentials.json")
 if not os.path.exists(credentials_path):
 	error = "credentials.json file not found at %s" % credentials_path
 	raise FileNotFoundError(error)
+
 c = open(credentials_path)
 creds = json.load(c)
-
-# Issue and consume state parameter value on the server-side.
-state_store = FileOAuthStateStore(expiration_seconds=300, base_dir="./data")
-# Persist installation data and lookup it by IDs.
-installation_store = FileInstallationStore(base_dir="./data")
-
-
 
 class Slack:
     """
         SW/OB Slack app
     """
 
-    def __init__(self, baseUrl) -> None:
-        self.baseUrl = baseUrl
+    def __init__(self, originalUrl:str) -> None:
         self.clientId = creds["client_id"]
         self.clientSecret = creds["client_secret"]
-        self.callback = f"{baseUrl}/platforms/slack/protocols/oauth2/redirect_codes/"
+        self.callback = f"{originalUrl}/platforms/slack/protocols/oauth2/redirect_codes/"
         self.scopes = ["chat:write", "channels:write", "groups:write", "im:write", "mpim:write", "channels:read", "groups:read", "im:read", "mpim:read", "usergroups:read", "users:read", "users.profile:read", "users:read.email"]
         self.authorize_url_generator = AuthorizeUrlGenerator(
             client_id=creds["client_id"],
             user_scopes=self.scopes,
             redirect_uri=self.callback
         )
-        
         self.oauth_settings = OAuthSettings(
             client_id=creds["client_id"],
             client_secret=creds["client_secret"]
         )
-        self.app = App(oauth_settings=self.oauth_settings)
-
+        self.slack = App(oauth_settings=self.oauth_settings)
 
     def init(self):
         """
         """
-        state = state_store.issue()
-        url = self.authorize_url_generator.generate(state)
-        return { "url": url }
-
-
-    def validate(self, code):
         try:
+            url = self.authorize_url_generator.generate("")
 
+            logger.info("- Successfully fetched init url")
+
+            return { "url": url }
+        
+        except Exception as error:
+            logger.error("Slack-OAuth2-init failed. See logs below")
+            raise error
+
+    def validate(self, code:str) -> dict:
+        """
+        """
+        try:
             response = self.app.client.oauth_v2_access(client_id=self.clientId, client_secret=self.clientSecret, code=code, redirect_uri=self.callback)
+
             if not bool(response.get("ok", "")):
                 raise errors.SlackApiError("Could not validate code")
 
@@ -73,26 +68,35 @@ class Slack:
 
             result = {
                 "profile": profile,
-                "access_token": user["access_token"]
+                "access_token": json.dumps(user)
             }
 
-            creds = json.dumps(result, indent=2)
-            return creds
+            return result
 
         except errors.SlackApiError as err:
-            logger.debug("Error obtaining user token and profile: %s", err)
-            return None
+            logger.error("Error obtaining user token and profile: %s", err)
+            raise error
+        
+        except Exception as error:
+            logger.error("Slack-OAuth2-validate failed. See logs below")
+            raise error
 
 
-    def revoke(self, user_token):
+    def revoke(self, token:dict) -> bool:
+        """
+        """
         try:
-            app = App(token=user_token)
+            app = App(token=token)
             res = app.client.auth_revoke()
             if bool(res.get("ok", "")):
                 return True
             else:
                 raise errors.SlackApiError("Error revoking token")
+
         except errors.SlackApiError as err:
-            logger.debug("Error revoking token: %s", err)
+            logger.error("Error revoking token: %s", err)
+            raise error
 
-
+        except Exception as error:
+            logger.error("Slack-OAuth2-revoke failed. See logs below")
+            raise error
