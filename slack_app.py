@@ -1,5 +1,7 @@
-from lib2to3.pgen2 import token
+import os
+import json
 import logging
+
 from slack_sdk.oauth import AuthorizeUrlGenerator
 from slack_sdk.oauth.installation_store import FileInstallationStore, Installation
 from slack_sdk.oauth.state_store import FileOAuthStateStore
@@ -7,19 +9,22 @@ from slack_sdk import errors
 from slack_bolt import App
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 
-import misc
-import json
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+credentials_path = os.path.join(os.path.dirname(__file__), "configs/credentials.json")
+if not os.path.exists(credentials_path):
+	error = "credentials.json file not found at %s" % credentials_path
+	raise FileNotFoundError(error)
+c = open(credentials_path)
+creds = json.load(c)
 
 # Issue and consume state parameter value on the server-side.
 state_store = FileOAuthStateStore(expiration_seconds=300, base_dir="./data")
 # Persist installation data and lookup it by IDs.
 installation_store = FileInstallationStore(base_dir="./data")
 
-creds = misc.get_creds('configs/credentials.json')
 
 
 class Slack:
