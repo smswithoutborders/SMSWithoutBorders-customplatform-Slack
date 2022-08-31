@@ -33,18 +33,13 @@ pip3 install -r requirements.txt
 ```json
 {
     "client_id": "",
-    "client_secret": "",
-    "signing_secret": "",
-    "bot_token": ""
+    "client_secret": ""
 }
 ```
-- Grab your slack app's client id, client secret and signing secret on the *Basic Information* page of the API site and add in the credentials file. Also copy the bot token from the *OAuth & Permissions* page.
+- Grab your slack app's client id, client secret and signing secret on the *Basic Information* page of your app dashboard and add in the credentials file.
 
-### Steps to run
-- Once all dependencies are installed and the `credentials.json` file is ready, run the events file. This should always be running so that it can listen to events.
-```bash
-python3 events.py
-```
+### Usage
+
 - In the `slack_app` file, we have 3 methods:
 	- `init`: To generate the authorization url. It returns a key-value pair with `url` as the key. This URL leads to the consent screen.
 	- `validate`: It accepts the temporary code you exchange in order to get the access token. For testing purposes, you can copy the code from the URL bar of your browser after granting the slack app permission and feed into this method. It returns two key-value pairs containing the `profile` and their `access_token`. This token is the user access token different from the bot token. 

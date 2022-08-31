@@ -1,9 +1,11 @@
+from lib2to3.pgen2 import token
 import logging
 from slack_sdk.oauth import AuthorizeUrlGenerator
 from slack_sdk.oauth.installation_store import FileInstallationStore, Installation
 from slack_sdk.oauth.state_store import FileOAuthStateStore
 from slack_sdk import errors
 from slack_bolt import App
+from slack_bolt.oauth.oauth_settings import OAuthSettings
 
 import misc
 import json
@@ -25,20 +27,23 @@ class Slack:
         SW/OB Slack app
     """
 
-    def __init__(self, baseUrl=None) -> None:
+    def __init__(self, baseUrl) -> None:
         self.baseUrl = baseUrl
         self.clientId = creds["client_id"]
         self.clientSecret = creds["client_secret"]
-        if baseUrl is not None:
-            self.callback = f"{baseUrl}/oauth/slack/callback"
-        self.signingSecret = creds["signing_secret"]
-        self.botToken = creds["bot_token"]
+        self.callback = f"{baseUrl}/platforms/slack/protocols/oauth2/redirect_codes/"
+        self.scopes = ["chat:write", "channels:write", "groups:write", "im:write", "mpim:write", "channels:read", "groups:read", "im:read", "mpim:read", "usergroups:read", "users:read", "users.profile:read", "users:read.email"]
         self.authorize_url_generator = AuthorizeUrlGenerator(
             client_id=creds["client_id"],
-            scopes=["channels:read", "groups:read", "im:read", "mpim:read", "usergroups:read", "users:read", "users.profile:read", "channels:join", "app_mentions:read", "im:history"],
-            user_scopes=["chat:write", "channels:write", "groups:write", "im:write", "mpim:write", "channels:read", "groups:read", "im:read", "mpim:read", "usergroups:read", "users:read", "users.profile:read", "users:read.email"]
+            user_scopes=self.scopes,
+            redirect_uri=self.callback
         )
-        self.app = App(token=self.botToken)
+        
+        self.oauth_settings = OAuthSettings(
+            client_id=creds["client_id"],
+            client_secret=creds["client_secret"]
+        )
+        self.app = App(oauth_settings=self.oauth_settings)
 
 
     def init(self):
@@ -52,13 +57,13 @@ class Slack:
     def validate(self, code):
         try:
 
-            response = self.app.client.oauth_v2_access(client_id=self.clientId, client_secret=self.clientSecret, code=code)
+            response = self.app.client.oauth_v2_access(client_id=self.clientId, client_secret=self.clientSecret, code=code, redirect_uri=self.callback)
             if not bool(response.get("ok", "")):
                 raise errors.SlackApiError("Could not validate code")
 
             user = response.get("authed_user", {})
             user_id = user["id"]
-            profile = self.app.client.users_profile_get(user=user_id)
+            profile = self.app.client.users_profile_get(user=user_id, token=user["access_token"])
             profile = profile.get("profile", {})
 
             result = {
