@@ -25,7 +25,8 @@ class Slack:
     def __init__(self, originalUrl:str) -> None:
         self.clientId = creds["client_id"]
         self.clientSecret = creds["client_secret"]
-        self.callback = f"{originalUrl}/platforms/slack/protocols/oauth2/redirect_codes/"
+        # self.callback = f"{originalUrl}/platforms/slack/protocols/oauth2/redirect_codes/"
+        self.callback = "https://localhost:9000/platforms/slack/protocols/oauth2/redirect_codes/"
         self.scopes = ["chat:write", "channels:write", "groups:write", "im:write", "mpim:write", "channels:read", "groups:read", "im:read", "mpim:read", "usergroups:read", "users:read", "users.profile:read", "users:read.email"]
         self.authorize_url_generator = AuthorizeUrlGenerator(
             client_id=creds["client_id"],
@@ -56,19 +57,21 @@ class Slack:
         """
         """
         try:
-            response = self.app.client.oauth_v2_access(client_id=self.clientId, client_secret=self.clientSecret, code=code, redirect_uri=self.callback)
+            response = self.slack.client.oauth_v2_access(client_id=self.clientId, client_secret=self.clientSecret, code=code, redirect_uri=self.callback)
 
             if not bool(response.get("ok", "")):
                 raise errors.SlackApiError("Could not validate code")
 
             user = response.get("authed_user", {})
             user_id = user["id"]
-            profile = self.app.client.users_profile_get(user=user_id, token=user["access_token"])
+            profile = self.slack.client.users_profile_get(user=user_id, token=user["access_token"])
             profile = profile.get("profile", {})
+
+            logger.info("- Successfully fetched token and profile")
 
             result = {
                 "profile": profile,
-                "access_token": json.dumps(user)
+                "token": json.dumps(user)
             }
 
             return result
@@ -86,9 +89,11 @@ class Slack:
         """
         """
         try:
-            app = App(token=token)
+            app = App(token=token["access_token"])
             res = app.client.auth_revoke()
             if bool(res.get("ok", "")):
+                logger.info("- Successfully revoked access")
+
                 return True
             else:
                 raise errors.SlackApiError("Error revoking token")
