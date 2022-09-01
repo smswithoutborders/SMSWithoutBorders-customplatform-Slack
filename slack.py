@@ -9,30 +9,29 @@ logger.setLevel(logging.DEBUG)
 
 def message_channel(channel_id, message, token):
     try:
-        app = App()
-        res = app.client.chat_postMessage(channel=channel_id, text=message, token=token)
+        app = App(token=token)
+        res = app.client.chat_postMessage(channel=channel_id, text=message)
         return bool(res.get("ok", ""))
     except errors.SlackApiError as err:
-            logger.debug("Error posting message: %s", err)
+        logger.debug(" - Error posting message: %s", err)
+        raise(err)
 
 
 def send_dm(email, message, token):
     try:
-        app = App()
-        response = app.client.users_lookupByEmail(email=email, token=token)
-        print(response)
+        app = App(token=token)
+        response = app.client.users_lookupByEmail(email=email)
         if bool(response.get("ok", "")) is False:
             return False
 
         user = response.get("user", {})
         uid = user.get("id", "")
-        print(uid)
-        res = app.client.chat_postMessage(channel=uid, text=message, token=token)
+        res = app.client.chat_postMessage(channel=uid, text=message)
 
         return bool(res.get("ok", ""))
 
     except errors.SlackApiError as err:
-            logger.debug("Error posting message: %s", err)
-            print(err)
+        logger.debug("- Error posting message: %s", err)
+        raise(err)
 
 
