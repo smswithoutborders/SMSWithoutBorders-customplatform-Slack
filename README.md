@@ -50,6 +50,9 @@ pip3 install -r requirements.txt
 If the messages are successfully sent, it will return `True`.
 - In order to test events are working, try tagging your bot in a channel it belongs to and it should send you a DM to connect to SWOB to Slack.
 
+### Distributing app across workspaces
+In order for your app to be used across multiple workspaces, read on [Apps distributed to multiple workspaces](https://api.slack.com/start/distributing#multi_workspace_apps) and enable public distribution from your app dashboard.
+
 #### References
 - [Slack API OAuth2 Docs](https://api.slack.com/authentication/oauth-v2)
 
