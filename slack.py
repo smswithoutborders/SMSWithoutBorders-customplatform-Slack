@@ -1,23 +1,29 @@
 import logging
+
 from slack_sdk import errors
 from slack_bolt import App
 
-
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
-
-def message_channel(channel_id, message, token):
+def message_channel(channel_id: str, message: str, token: str) -> bool:
+    """
+    """
     try:
         app = App(token=token)
         res = app.client.chat_postMessage(channel=channel_id, text=message)
         return bool(res.get("ok", ""))
+
     except errors.SlackApiError as err:
         logger.debug(" - Error posting message: %s", err)
-        raise(err)
+        raise err
+
+    except Exception as error:
+        raise error
 
 
-def send_dm(email, message, token):
+def send_dm(email: str, message: str, token: str) -> bool:
+    """
+    """
     try:
         app = App(token=token)
         response = app.client.users_lookupByEmail(email=email)
@@ -32,6 +38,7 @@ def send_dm(email, message, token):
 
     except errors.SlackApiError as err:
         logger.debug("- Error posting message: %s", err)
-        raise(err)
+        raise err
 
-
+    except Exception as error:
+        raise error
