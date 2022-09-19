@@ -14,7 +14,7 @@ def message_channel(channel_id: str, message: str, token: str) -> bool:
         return bool(res.get("ok", ""))
 
     except errors.SlackApiError as err:
-        logger.debug(" - Error posting message: %s", err)
+        logger.exception(" - Error posting message: %s", err)
         raise err
 
     except Exception as error:
@@ -37,7 +37,7 @@ def send_dm(email: str, message: str, token: str) -> bool:
         return bool(res.get("ok", ""))
 
     except errors.SlackApiError as err:
-        logger.debug("- Error posting message: %s", err)
+        logger.exception("- Error posting message: %s", err)
         raise err
 
     except Exception as error:
