@@ -17,15 +17,16 @@ if not os.path.exists(credentials_path):
 c = open(credentials_path)
 creds = json.load(c)
 
-class Slack:
+class Methods:
     """
         SW/OB Slack app
     """
 
-    def __init__(self, originalUrl:str) -> None:
+    def __init__(self, origin:str) -> None:
         self.clientId = creds["client_id"]
         self.clientSecret = creds["client_secret"]
-        self.callback = f"{originalUrl}/platforms/slack/protocols/oauth2/redirect_codes/"
+        # self.callback = f"{origin}/platforms/slack/protocols/oauth2/redirect_codes/"
+        self.callback = f"https://localhost:18000/platforms/slack/protocols/oauth2/redirect_codes/"
         self.scopes = ["chat:write", "channels:write", "groups:write", "im:write", "mpim:write", "channels:read", "groups:read", "im:read", "mpim:read", "usergroups:read", "users:read", "users.profile:read", "users:read.email"]
         self.authorize_url_generator = AuthorizeUrlGenerator(
             client_id=creds["client_id"],
@@ -38,7 +39,7 @@ class Slack:
         )
         self.slack = App(oauth_settings=self.oauth_settings)
 
-    def init(self):
+    def authorize(self):
         """
         """
         try:
@@ -84,7 +85,7 @@ class Slack:
             raise error
 
 
-    def revoke(self, token:dict) -> bool:
+    def invalidate(self, token:dict) -> bool:
         """
         """
         try:
