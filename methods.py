@@ -25,8 +25,7 @@ class Methods:
     def __init__(self, origin:str) -> None:
         self.clientId = creds["client_id"]
         self.clientSecret = creds["client_secret"]
-        # self.callback = f"{origin}/platforms/slack/protocols/oauth2/redirect_codes/"
-        self.callback = f"https://localhost:18000/platforms/slack/protocols/oauth2/redirect_codes/"
+        self.callback = f"{origin}/platforms/slack/protocols/oauth2/redirect_codes/"
         self.scopes = ["chat:write", "channels:write", "groups:write", "im:write", "mpim:write", "channels:read", "groups:read", "im:read", "mpim:read", "usergroups:read", "users:read", "users.profile:read", "users:read.email"]
         self.authorize_url_generator = AuthorizeUrlGenerator(
             client_id=creds["client_id"],
